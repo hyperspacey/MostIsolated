@@ -2,7 +2,7 @@
 Most isolated point in a set
 
 - Build using VS2017; tested on Windows 10. Requires a Windows machine to operate.
-- Naive implementation with regards to input data validation (garbage in, exceptions out)
+- Naive implementation with regards to input data validation, ignores bad data and outputs an error
 - Uses Code And Cats kdTree; well-tested, popular implementation. Link: https://github.com/codeandcats/KdTree
 
 - This particular solution uses a KD tree to represent the relationship between our various points.
