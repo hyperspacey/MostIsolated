@@ -30,17 +30,25 @@ namespace MostIsolated
                 var filePath = args[0];
                 if (File.Exists(filePath))
                 {
-                    KdTree<float, string> tree = GenerateTreeFromFile(filePath);
-                    if (tree == null)
+                    // Store in a dictionary for faster lookup via location ID
+                    Dictionary<string, Location> locations = GetLocationsFromFile(filePath);
+                    if (locations == null)
                     {
-                        Console.WriteLine("Tree generation failure");
+                        Console.WriteLine("Error reading locations");
                     }
                     else
                     {
-                        List<string> result = new List<string> { "No output", "No output" };//GetMostIsolated(tree);
-                        foreach (string entry in result)
+                        List<string> result = GetMostIsolated(locations);
+                        if (result == null)
                         {
-                            Console.WriteLine(entry);
+                            Console.WriteLine("Error finding most isolated point");
+                        }
+                        else
+                        {
+                            foreach (string entry in result)
+                            {
+                                Console.WriteLine(entry);
+                            }
                         }
                     }
                 }
@@ -55,10 +63,44 @@ namespace MostIsolated
             }
         }
 
-        private static KdTree<float, string> GenerateTreeFromFile(string filePath)
+        private static List<string> GetMostIsolated (Dictionary<string, Location> locations)
         {
-            // Read our input and get it into a KD Tree
-            KdTree<float, string> tree = new KdTree<float, string>(2, new FloatMath());
+            KdTree<float, string> tree = GenerateTreeFromLocations(locations);
+
+            List<string> mostIsolated = new List<string>();
+            double furthestDistanceSqd = 0;
+            foreach (KeyValuePair<string,Location> locationKvp in locations)
+            {
+                Location location = locationKvp.Value;
+                var nearestNeighbourNode = tree.GetNearestNeighbours(new float[] { location.X, location.Y }, 2);
+                string nearestNeighbourID = nearestNeighbourNode[1].Value; // Take the SECOND entry, first will always be self
+                Location nearestNeighbour = locations[nearestNeighbourID];
+
+                double distanceSqd = GetDistanceSqd (location, nearestNeighbour);
+                if (distanceSqd > furthestDistanceSqd)
+                {
+                    mostIsolated.Clear();
+                    mostIsolated.Add(location.ID);
+                    furthestDistanceSqd = distanceSqd;
+                }
+                else if (distanceSqd == furthestDistanceSqd)
+                {
+                    mostIsolated.Add(location.ID);
+                }
+            }
+
+            return mostIsolated;
+        }
+
+        private static double GetDistanceSqd (Location locationA, Location locationB)
+        {
+            return (Math.Pow(locationA.X - locationB.X, 2) + Math.Pow(locationA.Y - locationB.Y, 2));
+        }
+
+        private static Dictionary<string, Location> GetLocationsFromFile(string filePath)
+        {
+            // Read our input
+            Dictionary<string, Location> locations = new Dictionary<string, Location>();
 
             TextReader input = File.OpenText(filePath);
             string line;
@@ -68,7 +110,7 @@ namespace MostIsolated
                 Location location = ParseLocation(line);
                 if (location != null)
                 {
-                    tree.Add(new float[] { location.X, location.Y }, location.ID);
+                    locations.Add(location.ID, location);
                     ++numLocations;
                 }
                 else
@@ -84,8 +126,21 @@ namespace MostIsolated
             }
             else
             {
-                return tree;
+                return locations;
             }
+        }
+
+        private static KdTree<float, string> GenerateTreeFromLocations(Dictionary<string,Location> locations)
+        {
+            // Read our input and get it into a KD Tree
+            KdTree<float, string> tree = new KdTree<float, string>(2, new FloatMath());
+            foreach (KeyValuePair<string,Location> locationKvp in locations)
+            {
+                Location location = locationKvp.Value;
+                tree.Add(new float[] { location.X, location.Y }, location.ID);
+            }
+
+            return tree;
         }
 
         private static Location ParseLocation (string locationText)
