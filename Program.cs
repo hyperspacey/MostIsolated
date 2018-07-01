@@ -132,7 +132,7 @@ namespace MostIsolated
 
         private static KdTree<float, string> GenerateTreeFromLocations(Dictionary<string,Location> locations)
         {
-            // Read our input and get it into a KD Tree
+            // Generate a 2D tree from our input locations
             KdTree<float, string> tree = new KdTree<float, string>(2, new FloatMath());
             foreach (KeyValuePair<string,Location> locationKvp in locations)
             {
