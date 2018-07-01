@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+using System;
+using System.IO;
 
 namespace MostIsolated
 {
@@ -10,6 +8,23 @@ namespace MostIsolated
     {
         static void Main(string[] args)
         {
+            if (args.Length == 1)
+            {
+                var filePath = args[0];
+                if (File.Exists(filePath))
+                {
+                    TextReader input = File.OpenText(filePath);
+                    Console.WriteLine(input.ReadToEnd());
+                }
+                else
+                {
+                    Console.WriteLine("File does not exist");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Please specify a file");
+            }
         }
     }
 }
